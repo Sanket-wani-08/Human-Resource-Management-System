@@ -23,7 +23,10 @@ const app = express();
  *   CLIENT_URL=https://human-resource-management-system-zeta-lilac.vercel.app
  */
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 // Security headers
 app.use(helmet());
 
