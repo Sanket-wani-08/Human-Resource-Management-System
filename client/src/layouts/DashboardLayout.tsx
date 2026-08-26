@@ -27,7 +27,6 @@ const DashboardLayout: React.FC = () => {
   const role = user?.role;
   const isAdmin = role === 'ADMIN';
   const isHR = role === 'HR';
-  const isEmployee = role === 'EMPLOYEE';
 
   const handleLogout = () => {
     logout();

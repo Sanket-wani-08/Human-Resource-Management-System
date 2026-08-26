@@ -119,7 +119,7 @@ const Login: React.FC = () => {
         <div className="animate-fade-in-up delay-200">
           <div className="animate-float mb-8">
             <div className="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto">
-              {React.cloneElement(cfg.icon as React.ReactElement, { size: 48, className: 'text-white/90' })}
+              {React.cloneElement(cfg.icon as React.ReactElement<any>, { size: 48, className: 'text-white/90' })}
             </div>
           </div>
           <h2 className="text-4xl font-extrabold text-white leading-tight text-center">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import apiClient from '../api/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Employee, Department } from '../types';
 import { UserPlus, X, Search, Pencil, Filter } from 'lucide-react';
 
 interface AddEmployeeForm {
@@ -144,7 +143,7 @@ const Employees: React.FC = () => {
     setFormError('');
     const payload = { ...form, role: 'EMPLOYEE' };
     if (showEditModal && selectedEmployeeId) {
-      if (!payload.password) delete payload.password;
+      if (!payload.password) delete (payload as any).password;
       updateEmployeeMutation.mutate({ id: selectedEmployeeId, payload });
     } else {
       addEmployeeMutation.mutate(payload);
@@ -331,7 +330,7 @@ const Employees: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Department *</label>
                   <select name="department" required value={form.department} onChange={handleChange} className="form-input">
                     <option value="">Select department</option>
-                    {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                    {departments.map((d: any) => <option key={d._id} value={d._id}>{d.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -413,7 +412,7 @@ const Employees: React.FC = () => {
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Department *</label>
                   <select name="department" required value={form.department} onChange={handleChange} className="form-input">
                     <option value="">Select department</option>
-                    {departments.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                    {departments.map((d: any) => <option key={d._id} value={d._id}>{d.name}</option>)}
                   </select>
                 </div>
                 <div>

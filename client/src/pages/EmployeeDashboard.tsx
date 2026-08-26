@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import apiClient from '../api/client';
 import { CalendarCheck, LogOut, Clock, CalendarOff, Wallet, ArrowRight } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const EmployeeDashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isActing, setIsActing] = useState(false);
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const fetchDashboard = async () => {

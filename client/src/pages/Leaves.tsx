@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Leave } from '../types';
 import { Plus, X, Check, Ban, CalendarOff, Filter } from 'lucide-react';
 
 const LEAVE_TYPES = ['SICK', 'CASUAL', 'ANNUAL', 'MATERNITY', 'PATERNITY', 'UNPAID', 'OTHER'];
@@ -53,7 +52,7 @@ const Leaves: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leaves'] });
     },
-    onError: (error, variables) => {
+    onError: (_error, variables) => {
       alert(`Failed to ${variables.action} leave request.`);
     }
   });
