@@ -1,0 +1,149 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── CSS Variables ── */
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --sidebar-bg: #0f172a;
+  --card-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  --card-shadow-hover: 0 10px 40px rgba(0,0,0,0.13);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Keyframes ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+@keyframes pulse-ring-blue {
+  0%   { box-shadow: 0 0 0 0   rgba(59,130,246,0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(59,130,246,0); }
+  100% { box-shadow: 0 0 0 0   rgba(59,130,246,0); }
+}
+@keyframes pulse-ring-green {
+  0%   { box-shadow: 0 0 0 0   rgba(16,185,129,0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0   rgba(16,185,129,0); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Animation utilities ── */
+.animate-fade-in-up   { animation: fadeInUp  0.45s cubic-bezier(.25,.8,.25,1) both; }
+.animate-fade-in-left { animation: fadeInLeft 0.4s  cubic-bezier(.25,.8,.25,1) both; }
+.animate-scale-in     { animation: scaleIn   0.35s cubic-bezier(.25,.8,.25,1) both; }
+.animate-float        { animation: float 4s ease-in-out infinite; }
+
+.delay-100 { animation-delay: .10s; }
+.delay-150 { animation-delay: .15s; }
+.delay-200 { animation-delay: .20s; }
+.delay-300 { animation-delay: .30s; }
+.delay-400 { animation-delay: .40s; }
+
+/* ── Skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg,#e2e8f0 25%,#f8fafc 50%,#e2e8f0 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 10px;
+}
+
+/* ── Glass card ── */
+.glass-card {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow .25s ease, transform .25s ease;
+}
+.glass-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ── Icon gradient wrappers ── */
+.icon-blue   { background: linear-gradient(135deg,#3b82f6,#2563eb); }
+.icon-violet { background: linear-gradient(135deg,#8b5cf6,#7c3aed); }
+.icon-green  { background: linear-gradient(135deg,#10b981,#059669); }
+.icon-orange { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.icon-red    { background: linear-gradient(135deg,#ef4444,#dc2626); }
+.icon-indigo { background: linear-gradient(135deg,#6366f1,#4f46e5); }
+
+/* ── Sidebar ── */
+.sidebar-dark {
+  background: #0f172a;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Role badge ── */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.role-badge-admin    { background: rgba(59,130,246,.15);  color: #3b82f6; }
+.role-badge-hr       { background: rgba(139,92,246,.15);  color: #8b5cf6; }
+.role-badge-employee { background: rgba(16,185,129,.15);  color: #10b981; }
+
+/* ── Pulse buttons ── */
+.btn-pulse-blue  { animation: pulse-ring-blue  2s cubic-bezier(.4,0,.6,1) infinite; }
+.btn-pulse-green { animation: pulse-ring-green 2s cubic-bezier(.4,0,.6,1) infinite; }
+
+/* ── Form input ── */
+.form-input {
+  width: 100%;
+  padding: .625rem 1rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: .9rem;
+  font-family: var(--font-sans);
+  background: #f8fafc;
+  color: #1e293b;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+}
