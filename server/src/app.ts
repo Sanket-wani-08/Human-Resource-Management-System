@@ -13,17 +13,23 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   process.env.CLIENT_URL,
-];
+]
+  .filter(Boolean)
+  .map((url) => url!.trim().replace(/\/+$/, ""));
+
+console.log("Allowed CORS origins:", allowedOrigins);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests without an Origin header
+      // Allow requests without an Origin header (e.g. server-to-server, Postman)
       if (!origin) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      const normalizedOrigin = origin.trim().replace(/\/+$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
