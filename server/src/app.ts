@@ -23,51 +23,7 @@ const app = express();
  *   CLIENT_URL=https://human-resource-management-system-zeta-lilac.vercel.app
  */
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.CLIENT_URL,
-]
-  .filter((origin): origin is string => Boolean(origin))
-  .map((origin) => origin.trim().replace(/\/+$/, ""));
-
-console.log("Allowed CORS origins:", allowedOrigins);
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests without an Origin header.
-      // Useful for Postman, server-to-server requests, etc.
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      const normalizedOrigin = origin.trim().replace(/\/+$/, "");
-
-      if (allowedOrigins.includes(normalizedOrigin)) {
-        return callback(null, true);
-      }
-
-      console.error("Blocked by CORS:", origin);
-
-      return callback(
-        new Error(`Origin ${origin} is not allowed by CORS`)
-      );
-    },
-
-    credentials: true,
-
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-    ],
-  })
-);
-
+app.use(cors());
 // Security headers
 app.use(helmet());
 
