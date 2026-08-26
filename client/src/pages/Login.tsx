@@ -132,7 +132,7 @@ const Login: React.FC = () => {
 
         {/* Bottom tagline */}
         <p className="text-white/40 text-sm animate-fade-in-up delay-300">
-          &copy; 2025 HRMS · All rights reserved
+          &copy; 2026 HRMS · All rights reserved
         </p>
       </div>
 
