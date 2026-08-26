@@ -4,21 +4,36 @@ import helmet from "helmet";
 import morgan from "morgan";
 import routes from "./routes";
 import { errorHandler } from "./middleware/error.middleware";
-import { connectDB } from "./config/db";
-import { startCronJobs } from "./services/cron.service";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL,
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      // Allow requests without an Origin header
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("Blocked by CORS:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
+
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
