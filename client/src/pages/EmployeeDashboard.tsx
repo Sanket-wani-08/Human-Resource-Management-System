@@ -216,7 +216,7 @@ const EmployeeDashboard: React.FC = () => {
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-sm">Net Salary</span>
                 <span className="font-extrabold text-slate-900 text-xl">
-                  ${data.currentPayroll.netSalary.toLocaleString()}
+                  ₹{data.currentPayroll.netSalary.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">

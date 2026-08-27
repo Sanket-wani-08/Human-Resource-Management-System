@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
             <TrendingUp size={20} className="text-emerald-500" />
           </div>
           <p className="text-5xl font-extrabold text-slate-900 mt-4">
-            ${data.payrollSummary.total.toLocaleString()}
+            ₹{data.payrollSummary.total.toLocaleString()}
           </p>
           <p className="text-sm text-slate-500 mt-2">Total gross payout this month</p>
         </div>
