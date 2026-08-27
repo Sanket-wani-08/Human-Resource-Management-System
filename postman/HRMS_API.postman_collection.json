@@ -1,0 +1,1907 @@
+{
+  "info": {
+    "_postman_id": "hrms-api-collection-v1",
+    "name": "HRMS API Collection",
+    "description": "Complete Postman Collection for the Human Resource Management System (HRMS) backend API.\n\n**Base URL:** {{baseUrl}}\n\n**Tech Stack:** Node.js + Express + TypeScript + MongoDB + JWT\n\n**Roles:** ADMIN, HR, EMPLOYEE\n\n---\n\n## Quick Start\n1. Import this collection into Postman.\n2. Set the `baseUrl` collection variable to your target environment:\n   - **Local:** `http://localhost:5000/api`\n   - **Production:** `https://human-resource-management-system-1-uwxr.onrender.com/api`\n3. Run **Authentication > Login (Admin)** — the JWT token is saved automatically to the `token` variable.\n4. All protected requests use `{{token}}` automatically.\n\n## Demo Credentials\n| Role | Email | Password |\n|---|---|---|\n| ADMIN | admin@hrms.com | Admin@123 |\n| HR | hr@hrms.com | Hr@12345 |\n| EMPLOYEE | (created via Admin/HR) | Default@123 |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string",
+      "description": "Base URL for the HRMS API. Change to the production URL to test against the live backend: https://human-resource-management-system-1-uwxr.onrender.com/api"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT Bearer token. Populated automatically by the Login request test script."
+    },
+    {
+      "key": "employeeId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of an Employee record. Populated automatically after Create Employee."
+    },
+    {
+      "key": "departmentId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of a Department record. Populated automatically after Create Department."
+    },
+    {
+      "key": "attendanceId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of an Attendance record. Populated automatically after Check-In or Get All Attendance."
+    },
+    {
+      "key": "leaveId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of a Leave record. Populated automatically after Apply for Leave."
+    },
+    {
+      "key": "payrollId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of a Payroll record. Populated automatically after Create Payroll."
+    },
+    {
+      "key": "holidayId",
+      "value": "",
+      "type": "string",
+      "description": "MongoDB ObjectId of a Holiday record. Populated automatically after Create Holiday."
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints. POST /auth/login is public. POST /auth/logout and GET /auth/me require a valid Bearer token.\n\n**Login response structure:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": { ... },\n    \"token\": \"<jwt_string>\"\n  }\n}\n```\nThe test script on Login extracts `data.token` and stores it in the `token` collection variable.",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Parse the response",
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "// Test: status code is 200",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Test: response indicates success",
+                  "pm.test('Login successful', function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Test: token is present in response",
+                  "pm.test('Token is returned in response data', function () {",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "    pm.expect(jsonData.data.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "// Auto-save the JWT token to the collection variable",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('✅ JWT token saved to collection variable: token');",
+                  "} else {",
+                  "    console.warn('⚠️  Could not extract token from response. Check the response structure.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@hrms.com\",\n  \"password\": \"Admin@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate with the HRMS backend using email and password.\n\nA successful response returns a JWT token in `data.token`. The test script automatically saves this token to the `token` collection variable for use by all protected requests.\n\n**Public endpoint — no Authorization header required.**\n\n**Response shape:**\n```json\n{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": { ... },\n    \"token\": \"eyJhbGci...\"\n  }\n}\n```"
+          }
+        },
+        {
+          "name": "Login (HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Login successful', function () {",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "if (jsonData && jsonData.data && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('✅ HR JWT token saved to collection variable: token');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"hr@hrms.com\",\n  \"password\": \"Hr@12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as HR user. Saves JWT token automatically.\n\n**Role:** HR — can manage employees, attendance, leaves, payroll, and holidays but cannot modify departments or system settings."
+          }
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logout successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logs out the current user. Since the backend uses stateless JWT authentication, logout is a server-side acknowledgement only — the client is responsible for discarding the token.\n\n**Roles:** Any authenticated user.\n\n**Note from source code:** The backend simply returns a 200 success response. No token invalidation occurs server-side."
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('User data returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('user');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Returns the currently authenticated user's profile, with the associated Employee document populated if it exists.\n\n**Roles:** Any authenticated user.\n\n**Protected:** Requires `Authorization: Bearer {{token}}`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "description": "Employee management endpoints.\n\n**Access:** ADMIN and HR only (all endpoints in this folder are protected by `authorize('ADMIN', 'HR')` middleware).\n\nEmployee IDs (`employeeId` string field like `EMP001`) are **auto-generated** by the backend — do not send them in POST requests.\n\nThe `department` field must be a valid MongoDB ObjectId referencing an existing Department.\n\n**Employee Status Enum:** `ACTIVE` | `ON_LEAVE` | `TERMINATED` | `RESIGNED`\n\n**Employment Type Enum:** `FULL_TIME` | `PART_TIME` | `CONTRACT` | `INTERN`\n\n**Gender Enum:** `MALE` | `FEMALE` | `OTHER`",
+      "item": [
+        {
+          "name": "Get All Employees",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has employees array and pagination', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('employees');",
+                  "    pm.expect(jsonData.data).to.have.property('pagination');",
+                  "    pm.expect(jsonData.data.employees).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees?status=ACTIVE&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by employee status. Enum: ACTIVE | ON_LEAVE | TERMINATED | RESIGNED"
+                },
+                {
+                  "key": "department",
+                  "value": "{{departmentId}}",
+                  "description": "Filter by Department ObjectId",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search across firstName, lastName, employeeId, email, status fields",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Results per page (default: 10)"
+                }
+              ]
+            },
+            "description": "Returns a paginated list of employees with department and user info populated.\n\n**Roles:** ADMIN, HR\n\n**Query parameters (all optional):**\n- `status` — Filter by employee status enum value\n- `department` — Filter by Department ObjectId\n- `search` — Case-insensitive search across `firstName`, `lastName`, `employeeId`, `email`, `status`\n- `page` — Page number (default: 1)\n- `limit` — Results per page (default: 10)\n\n**Response includes:** `{ employees: [...], pagination: { total, page, pages } }`"
+          }
+        },
+        {
+          "name": "Get Employee by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Employee object returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees", "{{employeeId}}"]
+            },
+            "description": "Fetches a single employee by their MongoDB `_id` with department and user info populated.\n\n**Roles:** ADMIN, HR\n\n**Path parameter:** `:id` — MongoDB ObjectId of the employee"
+          }
+        },
+        {
+          "name": "Create Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Employee created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the newly created employee's _id to the employeeId variable",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('employeeId', jsonData.data._id);",
+                  "    console.log('✅ employeeId saved:', jsonData.data._id);",
+                  "} else {",
+                  "    console.warn('⚠️  Could not extract employee _id from response.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"phone\": \"+91-9876543210\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"gender\": \"MALE\",\n  \"address\": \"123 Main Street, Mumbai, Maharashtra\",\n  \"designation\": \"Software Engineer\",\n  \"department\": \"{{departmentId}}\",\n  \"joiningDate\": \"2024-01-15\",\n  \"employmentType\": \"FULL_TIME\",\n  \"salary\": 75000,\n  \"role\": \"EMPLOYEE\",\n  \"password\": \"Employee@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees"]
+            },
+            "description": "Creates a new Employee record along with a linked User account.\n\n**Roles:** ADMIN, HR\n\n**Important notes from source code:**\n- `employeeId` (string like `EMP001`) is **auto-generated** by the backend — do NOT include it in the request body.\n- The backend creates both a `User` record and an `Employee` record atomically.\n- `department` must be a valid MongoDB ObjectId of an existing Department.\n- If `password` is omitted, defaults to `Default@123`.\n- If `role` is omitted, defaults to `EMPLOYEE`.\n- `email` must be unique across all users.\n\n**Required fields:** `firstName`, `lastName`, `email`, `phone`, `designation`, `department`, `joiningDate`\n\n**Optional fields:** `dateOfBirth`, `gender`, `address`, `employmentType` (default: `FULL_TIME`), `salary` (default: 0), `role`, `password`\n\n**Gender enum:** `MALE` | `FEMALE` | `OTHER`\n\n**Employment type enum:** `FULL_TIME` | `PART_TIME` | `CONTRACT` | `INTERN`"
+          }
+        },
+        {
+          "name": "Update Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Employee updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+91-9876543211\",\n  \"designation\": \"Senior Software Engineer\",\n  \"department\": \"{{departmentId}}\",\n  \"salary\": 90000,\n  \"employmentType\": \"FULL_TIME\",\n  \"address\": \"456 Park Avenue, Mumbai, Maharashtra\",\n  \"gender\": \"MALE\",\n  \"dateOfBirth\": \"1990-05-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees", "{{employeeId}}"]
+            },
+            "description": "Updates an existing employee's information.\n\n**Roles:** ADMIN, HR\n\n**Notes from source code:**\n- `email` can be included to update the employee's email; the backend also updates the linked User record's email and checks for uniqueness.\n- `employeeId` (auto-generated string) cannot be changed via this endpoint.\n- `status` should be changed via `PATCH /:id/status` instead.\n- All fields are optional — only include the fields you want to update."
+          }
+        },
+        {
+          "name": "Delete (Deactivate) Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Employee deactivated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees", "{{employeeId}}"]
+            },
+            "description": "Soft-deletes an employee by setting their status to `TERMINATED` and deactivating the linked User account (`isActive: false`).\n\n**Roles:** ADMIN, HR\n\n**Note from source code:** This is a **soft deactivation** — the Employee and User records are NOT permanently deleted from the database. The employee's status becomes `TERMINATED` and the user can no longer log in."
+          }
+        },
+        {
+          "name": "Update Employee Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Employee status updated', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/employees/{{employeeId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["employees", "{{employeeId}}", "status"]
+            },
+            "description": "Updates only the status field of an employee.\n\n**Roles:** ADMIN, HR\n\n**Status enum:** `ACTIVE` | `ON_LEAVE` | `TERMINATED` | `RESIGNED`\n\n**Side effects from source code:**\n- Setting `TERMINATED` or `RESIGNED` also deactivates the linked User account.\n- Setting `ACTIVE` also reactivates the linked User account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "description": "Department management endpoints.\n\n**GET endpoints:** Accessible by all authenticated users (ADMIN, HR, EMPLOYEE).\n\n**POST / PUT / DELETE endpoints:** ADMIN only.\n\nDepartment `manager` field is optional and references an Employee ObjectId.",
+      "item": [
+        {
+          "name": "Get All Departments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Departments array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["departments"]
+            },
+            "description": "Returns all departments with `manager` (Employee firstName/lastName) populated.\n\n**Roles:** ADMIN, HR, EMPLOYEE (any authenticated user)"
+          }
+        },
+        {
+          "name": "Get Department by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Department data returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('department');",
+                  "    pm.expect(jsonData.data).to.have.property('employees');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["departments", "{{departmentId}}"]
+            },
+            "description": "Returns a single department by MongoDB `_id`, along with a list of employees assigned to it.\n\n**Roles:** ADMIN, HR, EMPLOYEE\n\n**Response includes:** `{ department: {...}, employees: [...] }`"
+          }
+        },
+        {
+          "name": "Create Department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Department created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the newly created department's _id",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('departmentId', jsonData.data._id);",
+                  "    console.log('✅ departmentId saved:', jsonData.data._id);",
+                  "} else {",
+                  "    console.warn('⚠️  Could not extract department _id from response.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Software development and engineering team responsible for product development\",\n  \"manager\": \"{{employeeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["departments"]
+            },
+            "description": "Creates a new Department.\n\n**Roles:** ADMIN only\n\n**Required fields:** `name` (must be unique)\n\n**Optional fields:** `description`, `manager` (Employee ObjectId)\n\n**Note:** `isActive` defaults to `true` and does not need to be sent."
+          }
+        },
+        {
+          "name": "Update Department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Department updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering & Technology\",\n  \"description\": \"Software development, engineering and technology operations team\",\n  \"manager\": \"{{employeeId}}\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["departments", "{{departmentId}}"]
+            },
+            "description": "Updates an existing department.\n\n**Roles:** ADMIN only\n\n**Updatable fields:** `name`, `description`, `manager` (Employee ObjectId), `isActive`\n\n**Note:** `name` must remain unique across all departments. If you try to rename to an existing department name, you will get a 400 error."
+          }
+        },
+        {
+          "name": "Delete Department",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Department deleted successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/departments/{{departmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["departments", "{{departmentId}}"]
+            },
+            "description": "Permanently deletes a department.\n\n**Roles:** ADMIN only\n\n**Important restriction from source code:** If any employees are currently assigned to this department, the request will fail with a 400 error: `Cannot delete department with assigned employees. Deactivate instead.`\n\nYou must either reassign employees to another department or use `PUT /departments/:id` with `isActive: false` to deactivate instead."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "description": "Attendance management endpoints.\n\n**Check-In / Check-Out / Get My Attendance:** Any authenticated user (but the backend only processes requests for users who have an associated Employee record).\n\n**Get All / Update / Delete Attendance:** ADMIN and HR only.\n\n**Important from source code:**\n- Check-in/check-out use IST (UTC+5:30) for date calculations.\n- Check-in status is determined by comparing current time with the `lateCheckInTime` system setting (default: `09:30`).\n- A unique compound index prevents duplicate attendance for the same employee and date.\n\n**Status enum:** `PRESENT` | `ABSENT` | `LATE` | `HALF_DAY` | `LEAVE`",
+      "item": [
+        {
+          "name": "Check In",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Check-in successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the attendance record _id",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('attendanceId', jsonData.data._id);",
+                  "    console.log('✅ attendanceId saved:', jsonData.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "check-in"]
+            },
+            "description": "Records a check-in for the authenticated employee.\n\n**Roles:** Any authenticated user with an associated Employee record.\n\n**No request body required.** The backend derives the employee from `req.user._id`, calculates the IST date, and sets the check-in time to `new Date()` (server time).\n\n**Business logic from source code:**\n- Prevents duplicate check-in for the same IST calendar day.\n- Status is `LATE` if current time > `lateCheckInTime` setting (default 09:30), otherwise `PRESENT`.\n\n**Note:** ADMIN/HR users without an associated Employee record will receive a 404 error."
+          }
+        },
+        {
+          "name": "Check Out",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Check-out successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "check-out"]
+            },
+            "description": "Records a check-out for the authenticated employee.\n\n**Roles:** Any authenticated user with an associated Employee record.\n\n**No request body required.** The backend finds today's attendance record and sets `checkOut` to `new Date()`, calculating `totalHours` automatically.\n\n**Business logic from source code:**\n- Returns 400 if no check-in exists for today.\n- Returns 400 if already checked out today.\n- `totalHours` is calculated as `(checkOut - checkIn) / (1000 * 60 * 60)` rounded to 2 decimal places."
+          }
+        },
+        {
+          "name": "Get My Attendance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Attendance array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "my"]
+            },
+            "description": "Returns all attendance records for the currently authenticated employee, sorted by date descending.\n\n**Roles:** Any authenticated user with an associated Employee record."
+          }
+        },
+        {
+          "name": "Get All Attendance (Admin/HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Attendance records returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Save the first attendanceId if the variable is not already set",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0 && !pm.collectionVariables.get('attendanceId')) {",
+                  "    pm.collectionVariables.set('attendanceId', jsonData.data[0]._id);",
+                  "    console.log('✅ attendanceId saved from list:', jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2024-08-27",
+                  "description": "Filter by date (ISO format YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "employeeId",
+                  "value": "{{employeeId}}",
+                  "description": "Filter by Employee MongoDB ObjectId",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all attendance records for all employees, with employee info populated.\n\n**Roles:** ADMIN, HR\n\n**Optional query parameters:**\n- `date` — ISO date string (e.g. `2024-08-27`) to filter records for a specific day\n- `employeeId` — MongoDB ObjectId of an Employee to filter by specific employee"
+          }
+        },
+        {
+          "name": "Update Attendance (Admin/HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Attendance updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkIn\": \"2024-08-27T09:00:00.000Z\",\n  \"checkOut\": \"2024-08-27T18:00:00.000Z\",\n  \"status\": \"PRESENT\",\n  \"totalHours\": 9\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{attendanceId}}"]
+            },
+            "description": "Allows Admin/HR to manually update an attendance record.\n\n**Roles:** ADMIN, HR\n\n**Updatable fields (all optional):**\n- `checkIn` — ISO datetime string\n- `checkOut` — ISO datetime string\n- `status` — Enum: `PRESENT` | `ABSENT` | `LATE` | `HALF_DAY` | `LEAVE`\n- `totalHours` — Number (decimal hours worked)"
+          }
+        },
+        {
+          "name": "Delete Attendance (Admin/HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Attendance deleted successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{attendanceId}}"]
+            },
+            "description": "Permanently deletes an attendance record by ID.\n\n**Roles:** ADMIN, HR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaves",
+      "description": "Leave management endpoints.\n\n**Apply for Leave / Get My Leaves:** Any authenticated user with an associated Employee record.\n\n**Get All Leaves / Approve / Reject:** ADMIN and HR only.\n\n**Leave status lifecycle:** `PENDING` → `APPROVED` or `REJECTED`\n\n**leaveType:** The field is a free-text `String` in the Mongoose schema — there is no enum constraint in the source code. Common values used in practice: `CASUAL`, `SICK`, `ANNUAL`, `MATERNITY`, `PATERNITY`, `UNPAID`.\n\n**Business logic from source code:**\n- Employees cannot approve or reject their own leave requests (403 error).\n- Approving an active leave (current date falls within leave period) sets employee status to `ON_LEAVE`.\n- Approval and rejection trigger email notifications to the employee.",
+      "item": [
+        {
+          "name": "Apply for Leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Leave applied successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the leave _id",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('leaveId', jsonData.data._id);",
+                  "    console.log('✅ leaveId saved:', jsonData.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveType\": \"SICK\",\n  \"startDate\": \"2024-09-10\",\n  \"endDate\": \"2024-09-12\",\n  \"reason\": \"Medical appointment and recovery from flu\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["leaves"]
+            },
+            "description": "Submits a leave request for the authenticated employee.\n\n**Roles:** Any authenticated user with an associated Employee record.\n\n**Required fields:** `leaveType`, `startDate`, `endDate`, `reason`\n\n**Validation from source code:**\n- `startDate` cannot be after `endDate`.\n- Overlapping leave requests with `PENDING` or `APPROVED` status are rejected.\n\n**leaveType:** Free-text string — no enum constraint in backend. Common values: `CASUAL`, `SICK`, `ANNUAL`, `MATERNITY`, `PATERNITY`, `UNPAID`\n\n**Dates:** ISO date string (`YYYY-MM-DD`) format recommended."
+          }
+        },
+        {
+          "name": "Get My Leaves",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Leaves array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leaves/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["leaves", "my"]
+            },
+            "description": "Returns all leave requests for the authenticated employee, sorted by creation date descending.\n\n**Roles:** Any authenticated user with an associated Employee record."
+          }
+        },
+        {
+          "name": "Get All Leaves (Admin/HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Leaves array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Save first pending leaveId if not already set",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0 && !pm.collectionVariables.get('leaveId')) {",
+                  "    pm.collectionVariables.set('leaveId', jsonData.data[0]._id);",
+                  "    console.log('✅ leaveId saved from list:', jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/leaves",
+              "host": ["{{baseUrl}}"],
+              "path": ["leaves"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "description": "Filter by leave status. Enum: PENDING | APPROVED | REJECTED",
+                  "disabled": true
+                },
+                {
+                  "key": "employeeId",
+                  "value": "{{employeeId}}",
+                  "description": "Filter by Employee MongoDB ObjectId",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all leave requests from all employees, with employee and reviewer information populated.\n\n**Roles:** ADMIN, HR\n\n**Optional query parameters:**\n- `status` — Filter by leave status: `PENDING` | `APPROVED` | `REJECTED`\n- `employeeId` — MongoDB ObjectId to filter leaves for a specific employee"
+          }
+        },
+        {
+          "name": "Approve Leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Leave approved successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leaves/{{leaveId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["leaves", "{{leaveId}}", "approve"]
+            },
+            "description": "Approves a pending leave request.\n\n**Roles:** ADMIN, HR\n\n**No request body required.**\n\n**Business logic from source code:**\n- Records `reviewedBy` (current user ObjectId) and `reviewedAt` (current timestamp).\n- Sets leave `status` to `APPROVED`.\n- If the leave period overlaps with today, sets the employee's status to `ON_LEAVE`.\n- Sends an email notification to the employee.\n- Returns 403 if the reviewer is the same employee who applied."
+          }
+        },
+        {
+          "name": "Reject Leave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Leave rejected successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leaves/{{leaveId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["leaves", "{{leaveId}}", "reject"]
+            },
+            "description": "Rejects a pending leave request.\n\n**Roles:** ADMIN, HR\n\n**No request body required.**\n\n**Business logic from source code:**\n- Records `reviewedBy` and `reviewedAt`.\n- Sets leave `status` to `REJECTED`.\n- Sends an email notification to the employee.\n- Returns 403 if the reviewer is the same employee who applied."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payroll",
+      "description": "Payroll management endpoints.\n\n**Get My Payroll:** Any authenticated user with an associated Employee record.\n\n**All other endpoints:** ADMIN and HR only.\n\n**Net Salary formula (calculated by backend):**\n```\nNetSalary = basicSalary + allowances + bonus - deductions - tax\n```\n`basicSalary` is automatically taken from the Employee's `salary` field — do NOT send `basicSalary` in the request body for creation.\n\n**Payment status enum:** `PENDING` | `PAID`\n\n**month field:** Full month name string (e.g. `August`, `September`) — matches JavaScript's `toLocaleString('default', { month: 'long' })` output.",
+      "item": [
+        {
+          "name": "Get My Payroll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Payroll records returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/my",
+              "host": ["{{baseUrl}}"],
+              "path": ["payroll", "my"]
+            },
+            "description": "Returns all payroll records for the authenticated employee, sorted by year and month descending.\n\n**Roles:** Any authenticated user with an associated Employee record."
+          }
+        },
+        {
+          "name": "Create Payroll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Payroll created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the payroll _id",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('payrollId', jsonData.data._id);",
+                  "    console.log('✅ payrollId saved:', jsonData.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employee\": \"{{employeeId}}\",\n  \"month\": \"August\",\n  \"year\": 2024,\n  \"allowances\": 5000,\n  \"bonus\": 2000,\n  \"deductions\": 1500,\n  \"tax\": 3000,\n  \"paymentStatus\": \"PENDING\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payroll",
+              "host": ["{{baseUrl}}"],
+              "path": ["payroll"]
+            },
+            "description": "Creates a payroll record for a specific employee and month/year period.\n\n**Roles:** ADMIN, HR\n\n**Required fields:** `employee` (Employee ObjectId), `month` (full month name string), `year` (number)\n\n**Optional fields (all default to 0):** `allowances`, `bonus`, `deductions`, `tax`\n\n**Optional:** `paymentStatus` — `PENDING` (default) or `PAID`\n\n**Important from source code:**\n- Do NOT send `basicSalary` or `netSalary` — the backend fetches `basicSalary` from `employee.salary` and calculates `netSalary` automatically.\n- A duplicate payroll for the same `employee + month + year` combination will return a 400 error.\n- Sending `paymentStatus: 'PAID'` will also set `paymentDate` to the current timestamp.\n- `month` should be the full English month name as returned by JavaScript's `Date.toLocaleString('default', { month: 'long' })`, e.g., `January`, `February`, ..., `December`."
+          }
+        },
+        {
+          "name": "Get All Payroll (Admin/HR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Payroll array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Save first payrollId if not already set",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0 && !pm.collectionVariables.get('payrollId')) {",
+                  "    pm.collectionVariables.set('payrollId', jsonData.data[0]._id);",
+                  "    console.log('✅ payrollId saved from list:', jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payroll",
+              "host": ["{{baseUrl}}"],
+              "path": ["payroll"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "August",
+                  "description": "Filter by month name (e.g. August, September)",
+                  "disabled": true
+                },
+                {
+                  "key": "year",
+                  "value": "2024",
+                  "description": "Filter by year (number)",
+                  "disabled": true
+                },
+                {
+                  "key": "employeeId",
+                  "value": "{{employeeId}}",
+                  "description": "Filter by Employee MongoDB ObjectId",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Returns all payroll records, with employee info (firstName, lastName, employeeId, designation) populated.\n\n**Roles:** ADMIN, HR\n\n**Optional query parameters:**\n- `month` — Full month name (e.g., `August`)\n- `year` — Year as number (e.g., `2024`)\n- `employeeId` — Employee MongoDB ObjectId to filter by specific employee"
+          }
+        },
+        {
+          "name": "Get Payroll by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Payroll record returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payroll/{{payrollId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["payroll", "{{payrollId}}"]
+            },
+            "description": "Returns a single payroll record by ID with full employee data populated.\n\n**Roles:** ADMIN, HR"
+          }
+        },
+        {
+          "name": "Update Payroll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Payroll updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allowances\": 6000,\n  \"bonus\": 3000,\n  \"deductions\": 2000,\n  \"tax\": 3500,\n  \"paymentStatus\": \"PAID\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/payroll/{{payrollId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["payroll", "{{payrollId}}"]
+            },
+            "description": "Updates an existing payroll record.\n\n**Roles:** ADMIN, HR\n\n**Updatable fields (all optional):** `allowances`, `bonus`, `deductions`, `tax`, `paymentStatus`\n\n**Important from source code:**\n- Do NOT send `basicSalary` or `netSalary` — `netSalary` is recalculated automatically from the existing `basicSalary` plus the updated values.\n- Setting `paymentStatus: 'PAID'` for the first time will also set `paymentDate` to the current timestamp."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Holidays",
+      "description": "Holiday management endpoints.\n\n**GET /holidays:** All authenticated users (ADMIN, HR, EMPLOYEE).\n\n**POST /holidays and DELETE /holidays/:id:** ADMIN and HR only.\n\n**Type enum:** `PUBLIC` | `COMPANY` | `OPTIONAL`",
+      "item": [
+        {
+          "name": "Get All Holidays",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Holidays array returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "// Save first holidayId if not already set",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.length > 0 && !pm.collectionVariables.get('holidayId')) {",
+                  "    pm.collectionVariables.set('holidayId', jsonData.data[0]._id);",
+                  "    console.log('✅ holidayId saved from list:', jsonData.data[0]._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/holidays",
+              "host": ["{{baseUrl}}"],
+              "path": ["holidays"]
+            },
+            "description": "Returns all holidays sorted by date ascending.\n\n**Roles:** ADMIN, HR, EMPLOYEE (any authenticated user)"
+          }
+        },
+        {
+          "name": "Create Holiday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Holiday created successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});",
+                  "",
+                  "// Auto-save the holiday _id",
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.success && jsonData.data && jsonData.data._id) {",
+                  "    pm.collectionVariables.set('holidayId', jsonData.data._id);",
+                  "    console.log('✅ holidayId saved:', jsonData.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Independence Day\",\n  \"date\": \"2024-08-15\",\n  \"type\": \"PUBLIC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/holidays",
+              "host": ["{{baseUrl}}"],
+              "path": ["holidays"]
+            },
+            "description": "Creates a new holiday.\n\n**Roles:** ADMIN, HR\n\n**Required fields:** `name`, `date`\n\n**Optional fields:** `type` (defaults to `PUBLIC`)\n\n**Type enum:** `PUBLIC` | `COMPANY` | `OPTIONAL`"
+          }
+        },
+        {
+          "name": "Delete Holiday",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Holiday deleted successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/holidays/{{holidayId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["holidays", "{{holidayId}}"]
+            },
+            "description": "Permanently deletes a holiday by ID.\n\n**Roles:** ADMIN, HR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard data endpoints.\n\n**Admin Dashboard:** ADMIN and HR only (returns company-wide workforce metrics).\n\n**Employee Dashboard:** Any authenticated user with an associated Employee record.",
+      "item": [
+        {
+          "name": "Admin Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Admin dashboard data returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('totalEmployees');",
+                  "    pm.expect(jsonData.data).to.have.property('totalDepartments');",
+                  "    pm.expect(jsonData.data).to.have.property('pendingLeaves');",
+                  "    pm.expect(jsonData.data).to.have.property('payrollSummary');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "admin"]
+            },
+            "description": "Returns company-wide HR metrics for the Admin/HR dashboard.\n\n**Roles:** ADMIN, HR\n\n**Response data includes:**\n- `totalEmployees` — Count of users with EMPLOYEE role\n- `activeEmployees` — Count with status ACTIVE\n- `totalDepartments` — Count of active departments\n- `presentToday` — Employees checked in today (IST)\n- `absentToday` — Active employees who haven't checked in today\n- `pendingLeaves` — Count of PENDING leave requests\n- `payrollSummary` — Current month/year total net salary paid"
+          }
+        },
+        {
+          "name": "Employee Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Employee dashboard data returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('employee');",
+                  "    pm.expect(jsonData.data).to.have.property('todayAttendance');",
+                  "    pm.expect(jsonData.data).to.have.property('recentLeaves');",
+                  "    pm.expect(jsonData.data).to.have.property('recentAttendance');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/employee",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "employee"]
+            },
+            "description": "Returns a personalized dashboard for the authenticated employee.\n\n**Roles:** Any authenticated user with an associated Employee record.\n\n**Response data includes:**\n- `employee` — Basic profile (firstName, lastName, designation, department)\n- `todayAttendance` — Today's attendance record or null\n- `pendingLeaves` — Count of the employee's PENDING leave requests\n- `recentLeaves` — Last 3 leave requests\n- `recentAttendance` — Last 5 attendance records\n- `currentPayroll` — Current month/year payroll record or null\n\n**Note:** ADMIN/HR users without an associated Employee record will receive a 404."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "description": "System settings endpoints.\n\n**GET /settings:** All authenticated users.\n\n**PUT /settings:** ADMIN only.\n\n**Settings fields:**\n- `companyName` — Company display name (default: `My Company`)\n- `lateCheckInTime` — Time string `HH:MM` used by attendance check-in to determine LATE status (default: `09:30`)",
+      "item": [
+        {
+          "name": "Get Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Settings returned', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "    pm.expect(jsonData.data).to.have.property('companyName');",
+                  "    pm.expect(jsonData.data).to.have.property('lateCheckInTime');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"]
+            },
+            "description": "Returns the global system settings. Creates a default settings document if none exists.\n\n**Roles:** ADMIN, HR, EMPLOYEE (any authenticated user)\n\n**Response data includes:** `companyName`, `lateCheckInTime`"
+          }
+        },
+        {
+          "name": "Update Settings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Settings updated successfully', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"HRMS Corp\",\n  \"lateCheckInTime\": \"09:30\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"]
+            },
+            "description": "Updates the global system settings. Creates a new settings document if none exists.\n\n**Roles:** ADMIN only\n\n**Updatable fields:**\n- `companyName` — Company display name string\n- `lateCheckInTime` — Time in `HH:MM` 24-hour format (e.g., `09:30`). This is used by the check-in logic to determine if an employee is LATE."
+          }
+        }
+      ]
+    }
+  ]
+}
